@@ -1,4 +1,6 @@
-blockchain = [[1]]
+blockchain = []
+open_transactions = []
+owner = 'Andre'
 
 
 def get_last_blockchain_value():
@@ -7,17 +9,25 @@ def get_last_blockchain_value():
     return None
 
 
-def add_transaction(transaction_amount, last_transaction=None):
-    if last_transaction is None:
-        last_transaction = get_last_blockchain_value()
-        if last_transaction is None:
-            last_transaction = [1]
-    blockchain.append([last_transaction, transaction_amount])
+def add_transaction(recipient, amount):
+    transaction = {
+        'sender': owner,
+        'recipient': recipient,
+        'amount': amount
+    }
+
+    open_transactions.append(transaction)
+
+
+def mine_block():
+    pass
 
 
 def get_transaction_value():
-    user_input = float(input('Your transaction amount please: '))
-    return user_input
+    recipient = input('Enter the recipient of the transaction: ')
+    amount = float(input('Your transaction amount please: '))
+
+    return recipient, amount
 
 
 def get_user_choice():
@@ -28,23 +38,25 @@ def get_user_choice():
 def print_blockchain_elements():
     for block in blockchain:
         print(block)
+    else:
+        print('-'*20)
+
     print("Complete blockchain, "+str(len(blockchain))+" elements")
     print(blockchain)
+    print('-'*20)
 
 
 def verify_chain():
-    block_index = 0
     is_valid = True
-    for block in blockchain:
+
+    for block_index in range(len(blockchain)):
         if block_index == 0:
-            block_index += 1
             continue
-        elif block[0] == blockchain[block_index - 1]:
+        elif blockchain[block_index][0] == blockchain[block_index - 1]:
             is_valid = True
         else:
             is_valid = False
             break
-        block_index += 1
     return is_valid
 
 
@@ -59,8 +71,10 @@ while waiting_for_input:
     user_choice = get_user_choice().lower()
 
     if user_choice == '1':
-        tx_amount = get_transaction_value()
-        add_transaction(tx_amount)
+        tx_data = get_transaction_value()
+        recipient, amount = tx_data
+        add_transaction(recipient, amount)
+        print(open_transactions)
     elif user_choice == '2':
         print_blockchain_elements()
         input()
@@ -75,6 +89,6 @@ while waiting_for_input:
     if not verify_chain():
         print('Invalid blockchain!')
         waiting_for_input = False
+else:
+    print("User left")
 
-
-print('Done!')
