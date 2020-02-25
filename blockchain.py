@@ -1,6 +1,16 @@
-blockchain = []
+genesis_block = {
+    'previous_hash': '',
+    'index': 0,
+    'transactions': []
+}
+blockchain = [genesis_block]
+
 open_transactions = []
 owner = 'Andre'
+
+
+def hash_block(block):
+    return '-'.join([str(block[key]) for key in block])
 
 
 def get_last_blockchain_value():
@@ -20,7 +30,16 @@ def add_transaction(recipient, amount):
 
 
 def mine_block():
-    pass
+    last_block = blockchain[-1]
+    hashed_block = hash_block(last_block)
+
+    block = {
+        'previous_hash': hashed_block,
+        'index': len(blockchain),
+        'transactions': open_transactions
+    }
+
+    blockchain.append(block)
 
 
 def get_transaction_value():
@@ -47,24 +66,21 @@ def print_blockchain_elements():
 
 
 def verify_chain():
-    is_valid = True
-
-    for block_index in range(len(blockchain)):
-        if block_index == 0:
+    for index, block in enumerate(blockchain):
+        if index == 0:
             continue
-        elif blockchain[block_index][0] == blockchain[block_index - 1]:
-            is_valid = True
-        else:
-            is_valid = False
-            break
-    return is_valid
+
+        if block['previous_hash'] != hash_block(blockchain[index - 1]):
+            return False
+    return True
 
 
 waiting_for_input = True
 while waiting_for_input:
     print("Please choose")
     print('1: Add a new transaction value')
-    print('2: Output the blockchain blocks')
+    print('2: Mine a new block')
+    print('3: Output the blockchain blocks')
     print('h: Manipulate blockchain blocks')
     print('q: Quit')
 
@@ -74,13 +90,18 @@ while waiting_for_input:
         tx_data = get_transaction_value()
         recipient, amount = tx_data
         add_transaction(recipient, amount)
-        print(open_transactions)
     elif user_choice == '2':
+        mine_block()
+    elif user_choice == '3':
         print_blockchain_elements()
-        input()
+        input('Press any key to continue')
     elif user_choice == 'h':
         if len(blockchain) >= 1:
-            blockchain[0] = [2]
+            blockchain[0] = {
+                'previous_hash': '0xlkji2323LLlkjMDOIU2N,M.N,.',
+                'index': 1,
+                'transactions': []
+            }
     elif user_choice == 'q':
         waiting_for_input = False
     else:
