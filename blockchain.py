@@ -10,15 +10,8 @@ from hash_util import hash_string_256, hash_block
 # The reward we give to miners (for creating a new block)
 MINING_REWARD = 10
 
-# Our starting block for the blockchain
-genesis_block = {
-    'previous_hash': '',
-    'index': 0,
-    'transactions': [],
-    'proof': 100
-}
 # Initializing our (empty) blockchain list
-blockchain = [genesis_block]
+blockchain = []
 # Unhandled transactions
 open_transactions = []
 # We are the owner of this blockchain node, hence this is our identifier (e.g. for sending coins)
@@ -28,16 +21,27 @@ participants = {owner}
 
 
 def load_data():
+    global blockchain
+    global open_transactions
+
     try:
         with open('blockchain.p', mode='rb') as f:
             file_content = pickle.loads(f.read())
 
-            global blockchain
-            global open_transactions
-
             blockchain = file_content['chain']
             open_transactions = file_content['ot']
     except IOError:
+        # Our starting block for the blockchain
+        genesis_block = {
+            'previous_hash': '',
+            'index': 0,
+            'transactions': [],
+            'proof': 100
+        }
+        # Initializing our (empty) blockchain list
+        blockchain = [genesis_block]
+        # Unhandled transactions
+        open_transactions = []
         print("A new blockchain will be created")
 
 
@@ -45,12 +49,15 @@ load_data()
 
 
 def save_data():
-    with open('blockchain.p', mode='wb') as f:
-        save_data = {
-            'chain': blockchain,
-            'ot': open_transactions
-        }
-        f.write(pickle.dumps(save_data))
+    try:
+        with open('blockchain.p', mode='wb') as f:
+            save_data = {
+                'chain': blockchain,
+                'ot': open_transactions
+            }
+            f.write(pickle.dumps(save_data))
+    except IOError:
+        print("Blockchain could not been saved!")
 
 
 def valid_proof(transactions, last_hash, proof):
