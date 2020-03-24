@@ -16,14 +16,19 @@ class Blockchain:
         # Our starting block for the blockchain
         genesis_block = Block(0, '', [], 100, 0)
         # Initializing our (empty) blockchain list
-        self.__chain = [genesis_block]
+        self.chain = [genesis_block]
         # Unhandled transactions
         self.__open_transactions = []
         self.load_data()
         self.hosting_node_id = hosting_node_id
 
-    def get_chain(self):
+    @property
+    def chain(self):
         return self.__chain[:]
+
+    @chain.setter
+    def chain(self, val):
+        self.__chain = val
 
     def get_open_transaction(self):
         return self.__open_transactions[:]
@@ -33,7 +38,7 @@ class Blockchain:
             with open('blockchain.p', mode='rb') as f:
                 file_content = pickle.loads(f.read())
 
-                self.__chain = file_content['chain']
+                self.chain = file_content['chain']
                 self.__open_transactions = file_content['ot']
         except IOError:
             print("A new blockchain will be created")
