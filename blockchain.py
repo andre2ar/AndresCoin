@@ -109,6 +109,9 @@ class Blockchain:
             :recipient: The recipient of the coins.
             :amount: The amount of coins sent with the transaction (default = 1.0)
         """
+        if self.hosting_node_id is None:
+            return False
+
         transaction = Transaction(sender, recipient, amount)
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
@@ -117,6 +120,9 @@ class Blockchain:
         return False
 
     def mine_block(self):
+        if self.hosting_node_id is None:
+            return False
+
         """Create a new block and add open transactions to it."""
         # Fetch the currently last block of the blockchain
         last_block = self.__chain[-1]

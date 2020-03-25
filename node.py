@@ -1,12 +1,13 @@
 from blockchain import Blockchain
 from utility.verification import Verification
+from wallet import Wallet
 
 
 class Node:
     def __init__(self):
         # self.id = str(uuid4())
-        self.id = "André"
-        self.blockchain = Blockchain(self.id)
+        self.wallet = Wallet()
+        self.blockchain = None
 
     def get_transaction_value(self):
         """ Returns the input of the user (a new transaction amount) as a float. """
@@ -39,18 +40,21 @@ class Node:
             print('2: Mine a new block')
             print('3: Output the blockchain blocks')
             print('4: Check transaction validity')
+            print('5: Create wallet')
+            print('6: Load wallet')
             print('q: Quit')
             user_choice = self.get_user_choice()
             if user_choice == '1':
                 tx_data = self.get_transaction_value()
                 recipient, amount = tx_data
                 # Add the transaction amount to the blockchain
-                if self.blockchain.add_transaction(recipient, self.id, amount=amount):
+                if self.blockchain.add_transaction(recipient, self.wallet.public_key, amount=amount):
                     print('Added transaction!')
                 else:
                     print('Transaction failed!')
             elif user_choice == '2':
-                self.blockchain.mine_block()
+                if self.blockchain is None or not self.blockchain.mine_block():
+                    print('Mining failed. You must creat a wallet.')
             elif user_choice == '3':
                 self.print_blockchain_elements()
             elif user_choice == '4':
@@ -58,18 +62,23 @@ class Node:
                     print('All transactions are valid')
                 else:
                     print('There are invalid transactions')
+            elif user_choice == '5':
+                self.wallet.create_key()
+                self.blockchain = Blockchain(self.wallet.public_key)
+            elif user_choice == '6':
+                pass
             elif user_choice == 'q':
                 # This will lead to the loop to exist because it's running condition becomes False
                 waiting_for_input = False
             else:
                 print('Input was invalid, please pick a value from the list!')
 
-            if not Verification.verify_chain(self.blockchain.chain):
+            if self.blockchain is not None and not Verification.verify_chain(self.blockchain.chain):
                 self.print_blockchain_elements()
                 print('Invalid blockchain!')
+                print('Balance of {}: {:6.2f}'.format(self.wallet.public_key, self.blockchain.get_balance()))
                 # Break out of the loop
                 break
-            print('Balance of {}: {:6.2f}'.format(self.id, self.blockchain.get_balance()))
         else:
             print('User left!')
 
