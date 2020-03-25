@@ -101,7 +101,7 @@ class Blockchain:
             return None
         return self.__chain[-1]
 
-    def add_transaction(self, recipient, sender, amount=1.0):
+    def add_transaction(self, recipient, sender, signature, amount=1.0):
         """ Append a new value as well as the last blockchain value to the blockchain.
 
         Arguments:
@@ -112,7 +112,7 @@ class Blockchain:
         if self.hosting_node_id is None:
             return False
 
-        transaction = Transaction(sender, recipient, amount)
+        transaction = Transaction(sender, recipient, signature, amount)
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
             self.save_data()
@@ -129,7 +129,7 @@ class Blockchain:
         # Hash the last block (=> to be able to compare it to the stored hash value)
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
-        reward_transaction = Transaction('MINING', self.hosting_node_id, MINING_REWARD)
+        reward_transaction = Transaction('MINING', self.hosting_node_id, '', MINING_REWARD)
 
         # Copy transaction instead of manipulating the original open_transactions list This ensures that if for some
         # reason the mining should fail, we don't have the reward transaction stored in the open transactions
