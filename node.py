@@ -14,12 +14,14 @@ CORS(app)
 def create_keys():
     wallet.create_key()
     if wallet.save_key():
-        response = {
-            'public_key': wallet.public_key,
-            'private_key': wallet.private_key
-        }
         global blockchain
         blockchain = Blockchain(wallet.public_key)
+
+        response = {
+            'public_key': wallet.public_key,
+            'private_key': wallet.private_key,
+            'balance': get_balance()
+        }
         return jsonify(response), 201
     else:
         response = {
@@ -31,15 +33,34 @@ def create_keys():
 @app.route('/wallet', methods=['GET'])
 def load_key():
     if wallet.load_key():
-        response = {
-            'public_key': wallet.public_key
-        }
         global blockchain
         blockchain = Blockchain(wallet.public_key)
+        response = {
+            'public_key': wallet.public_key,
+            'balance': get_balance()
+        }
+
         return jsonify(response), 201
     else:
         response = {
             'message': 'Loading the keys failed.'
+        }
+        return jsonify(response), 500
+
+
+@app.route('/balance', methods=['GET'])
+def get_balance():
+    balance = blockchain.get_balance()
+    if balance is not None:
+        response = {
+            'message': 'Fetched balance successfully.',
+            'balance': balance
+        }
+        return jsonify(response), 500
+    else:
+        response = {
+            'message': 'Loading balance failed',
+            'wallet_set_up': wallet.public_key is not None
         }
         return jsonify(response), 500
 
@@ -52,7 +73,8 @@ def mine():
         dict_block['transactions'] = [tx.__dict__ for tx in dict_block['transactions']]
         response = {
             'message': 'Block added successfully.',
-            'block': dict_block
+            'block': dict_block,
+            'balance': blockchain.get_balance()
         }
 
         return jsonify(response), 201
