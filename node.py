@@ -131,6 +131,18 @@ def mine():
         return jsonify(response), 500
 
 
+@app.route('/transactions', methods=['GET'])
+def get_open_transactions():
+    transactions = blockchain.get_open_transaction()
+    dict_transactions = [tx.__dict__ for tx in transactions]
+    response = {
+        'message': 'Fetched transactions successfully.',
+        'transactions': dict_transactions
+    }
+
+    return jsonify(response), 200
+
+
 @app.route('/chain', methods=['GET'])
 def get_chain():
     chain_snapshot = blockchain.chain
