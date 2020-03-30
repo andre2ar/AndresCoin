@@ -182,5 +182,30 @@ def add_node():
     return jsonify(response), 201
 
 
+@app.route('/node/<node_url>', methods=['DELETE'])
+def remove_node(node_url):
+    if node_url is '' or node_url is None:
+        response = {
+            'message': 'No node found.'
+        }
+        return jsonify(response), 400
+
+    blockchain.remove_peer_node(node_url)
+    response = {
+        'message': 'Node removed',
+        'all_nodes': blockchain.get_peer_nodes()
+    }
+    return jsonify(response), 200
+
+
+@app.route('/nodes', methods=['GET'])
+def get_nodes():
+    nodes = blockchain.get_peer_nodes()
+    response = {
+        'all_nodes': nodes
+    }
+    return jsonify(response), 200
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
