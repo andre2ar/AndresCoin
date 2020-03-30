@@ -117,8 +117,8 @@ class Blockchain:
             :recipient: The recipient of the coins.
             :amount: The amount of coins sent with the transaction (default = 1.0)
         """
-        if self.public_key is None:
-            return False
+        # if self.public_key is None:
+        #     return False
 
         transaction = Transaction(sender, recipient, signature, amount)
         if Verification.verify_transaction(transaction, self.get_balance):
@@ -166,8 +166,8 @@ class Blockchain:
         self.save_data()
         for node in self.__peer_nodes:
             url = 'http://{}/broadcast-block'.format(node)
-            converted_block = block.__dict__.copy(node)
-            converted_block['transactions'] = [tx.__dict__ for tx in block['transactions']]
+            converted_block = block.__dict__.copy()
+            converted_block['transactions'] = [tx.__dict__ for tx in converted_block['transactions']]
             try:
                 response = requests.post(url, json={'block': converted_block})
                 if response.status_code == 400 or response.status_code == 500:
@@ -180,7 +180,7 @@ class Blockchain:
     def add_block(self, block):
         transactions = [Transaction(tx['sender'], tx['recipient'], tx['signature'], tx['amount']) for tx in block['transactions']]
         proof_is_valid = Verification.valid_proof(transactions[:-1], block['previous_hash'], block['proof'])
-        hashes_match = hash_block(self.chain[-1]) == block['precious_hash']
+        hashes_match = hash_block(self.chain[-1]) == block['previous_hash']
         if not proof_is_valid or not hashes_match:
             return False
 

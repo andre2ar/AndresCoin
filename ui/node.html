@@ -335,7 +335,7 @@
                         var vm = this
                         axios.get('/transactions')
                             .then(function (response) {
-                                vm.openTransactions = response.data
+                                vm.openTransactions = response.data.transactions
                                 vm.dataLoading = false
                             })
                             .catch(function (error) {
