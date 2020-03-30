@@ -83,12 +83,12 @@
             </div>
             <div class="row">
                 <div class="col">
-                    <div v-if="!walletLoading && !wallet">
-                        <button class="btn btn-primary" @click="onCreateWallet">
+                    <div v-if="!walletLoading">
+                        <button v-if="!wallet" class="btn btn-primary" @click="onCreateWallet">
                             Create new Wallet
                         </button>
                         <button class="btn btn-primary" @click="onLoadWallet">
-                            Load Wallet
+                            Update Balance
                         </button>
                     </div>
 

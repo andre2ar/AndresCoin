@@ -1,5 +1,6 @@
 from functools import reduce
 import pickle
+import requests
 
 # Import two functions from our hash_util.py file. Omit the ".py" in the import
 from utility.hash_util import hash_block
@@ -13,14 +14,14 @@ MINING_REWARD = 10
 
 
 class Blockchain:
-    def __init__(self, hosting_node_id):
+    def __init__(self, public_key):
         # Our starting block for the blockchain
         genesis_block = Block(0, '', [], 100, 0)
         # Initializing our (empty) blockchain list
         self.chain = [genesis_block]
         # Unhandled transactions
         self.__open_transactions = []
-        self.hosting_node_id = hosting_node_id
+        self.public_key = public_key
         self.__peer_nodes = set()
         self.load_data()
 
@@ -69,16 +70,16 @@ class Blockchain:
             proof += 1
         return proof
 
-    def get_balance(self):
+    def get_balance(self, sender=None):
         """Calculate and return the balance for a participant.
-
-        Arguments:
-            :participant: The person for whom to calculate the balance.
         """
-        if self.hosting_node_id is None:
-            return None
+        if sender is None:
+            participant = self.public_key
+            if self.public_key is None:
+                return None
+        else:
+            participant = sender
 
-        participant = self.hosting_node_id
         # Fetch a list of all sent coin amounts for the given person (empty lists are returned if the person was NOT the
         # sender) This fetches sent amounts of transactions that were already included in blocks of the blockchain
         tx_sender = [[tx.amount for tx in block.transactions
@@ -108,7 +109,7 @@ class Blockchain:
             return None
         return self.__chain[-1]
 
-    def add_transaction(self, recipient, sender, signature, amount=1.0):
+    def add_transaction(self, recipient, sender, signature, amount=1.0, is_receiving=False):
         """ Append a new value as well as the last blockchain value to the blockchain.
 
         Arguments:
@@ -116,18 +117,31 @@ class Blockchain:
             :recipient: The recipient of the coins.
             :amount: The amount of coins sent with the transaction (default = 1.0)
         """
-        if self.hosting_node_id is None:
+        if self.public_key is None:
             return False
 
         transaction = Transaction(sender, recipient, signature, amount)
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
             self.save_data()
+
+            if not is_receiving:
+                for node in self.__peer_nodes:
+                    url = 'http://{}/broadcast-transaction'.format(node)
+                    try:
+                        response = requests.post(url, json={'sender': sender, 'recipient': recipient, 'amount': amount, 'signature': signature})
+                        if response.status_code == 400 or response.status_code == 500:
+                            print("Transaction declined, needs resolving")
+                            return False
+                    except requests.exceptions.ConnectionError:
+                        continue
+
             return True
+
         return False
 
     def mine_block(self):
-        if self.hosting_node_id is None:
+        if self.public_key is None:
             return None
 
         """Create a new block and add open transactions to it."""
@@ -136,7 +150,7 @@ class Blockchain:
         # Hash the last block (=> to be able to compare it to the stored hash value)
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
-        reward_transaction = Transaction('MINING', self.hosting_node_id, '', MINING_REWARD)
+        reward_transaction = Transaction('MINING', self.public_key, '', MINING_REWARD)
 
         # Copy transaction instead of manipulating the original open_transactions list This ensures that if for some
         # reason the mining should fail, we don't have the reward transaction stored in the open transactions
