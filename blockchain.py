@@ -22,6 +22,7 @@ class Blockchain:
         self.__open_transactions = []
         self.load_data()
         self.hosting_node_id = hosting_node_id
+        self.__peer_nodes = set()
 
     @property
     def chain(self):
@@ -41,6 +42,7 @@ class Blockchain:
 
                 self.chain = file_content['chain']
                 self.__open_transactions = file_content['ot']
+                self.__peer_nodes = file_content['nodes']
         except IOError:
             print("A new blockchain will be created")
 
@@ -49,7 +51,8 @@ class Blockchain:
             with open('blockchain.p', mode='wb') as f:
                 save_data = {
                     'chain': self.__chain,
-                    'ot': self.__open_transactions
+                    'ot': self.__open_transactions,
+                    'nodes': self.__peer_nodes
                 }
                 f.write(pickle.dumps(save_data))
         except IOError:
@@ -149,3 +152,11 @@ class Blockchain:
         self.save_data()
 
         return block
+
+    def add_peer_node(self, node):
+        self.__peer_nodes.add(node)
+        self.save_data()
+
+    def remove_peer_node(self, node):
+        self.__peer_nodes.discard(node)
+        self.save_data()
